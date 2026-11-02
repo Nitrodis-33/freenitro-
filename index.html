@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Activation</title>
+<link rel="icon" href="https://discord.com/assets/favicon.ico">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'gg sans','Segoe UI',system-ui,sans-serif;
+    background:#0a0a0f;color:#e8eaf0;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px;overflow-x:hidden;position:relative;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;
+    background:
+      radial-gradient(circle at 20% 10%,rgba(88,101,242,.35),transparent 45%),
+      radial-gradient(circle at 80% 90%,rgba(168,85,247,.28),transparent 45%),
+      radial-gradient(circle at 50% 50%,rgba(59,130,246,.12),transparent 60%);
+    z-index:0;pointer-events:none;
+  }
+  .card{
+    position:relative;z-index:1;max-width:520px;width:100%;
+    background:rgba(19,20,28,.85);backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.08);border-radius:24px;
+    padding:48px 36px;text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 100px rgba(88,101,242,.15);
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:linear-gradient(135deg,#5865f2,#a855f7);
+    color:#fff;font-size:12px;font-weight:600;
+    padding:6px 14px;border-radius:99px;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;
+  }
+  .badge::before{
+    content:'';width:8px;height:8px;border-radius:50%;
+    background:#22c55e;box-shadow:0 0 8px #22c55e;
+    animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{50%{opacity:.4}}
+  .logo{width:72px;height:72px;margin:0 auto 24px;display:block}
+  h1{
+    font-size:32px;font-weight:800;line-height:1.2;margin-bottom:12px;
+    background:linear-gradient(135deg,#fff,#a5b4fc);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .sub{color:#9ca3af;font-size:15px;line-height:1.6;margin-bottom:32px}
+  .features{
+    text-align:left;background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:14px;padding:20px;margin-bottom:28px;
+  }
+  .feat{
+    display:flex;align-items:center;gap:12px;
+    padding:8px 0;font-size:14px;color:#d1d5db;
+  }
+  .feat svg{flex-shrink:0;color:#22c55e}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;padding:16px;
+    background:linear-gradient(135deg,#5865f2,#7c3aed);
+    color:#fff;border:none;border-radius:12px;
+    font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;
+    transition:transform .15s,box-shadow .15s;
+    box-shadow:0 10px 30px rgba(88,101,242,.4);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(88,101,242,.6)}
+  .btn:active{transform:translateY(0)}
+  .foot{margin-top:20px;font-size:12px;color:#6b7280}
+  .trust{
+    display:flex;justify-content:center;gap:20px;
+    margin-top:20px;font-size:11px;color:#6b7280;
+  }
+  .trust span{display:flex;align-items:center;gap:4px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="badge">Live · 2,847 activated today</div>
+  <svg class="logo" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
+    <path fill="url(#g)" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5865f2"/>
+        <stop offset="1" stop-color="#a855f7"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <h1>Unlock Discord Premium</h1>
+  <p class="sub">Activate your account to receive premium features, exclusive badges, and Nitro perks instantly.</p>
+
+  <div class="features">
+    <div class="feat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      Free Nitro for 3 months
+    </div>
+    <div class="feat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      Exclusive profile badges
+    </div>
+    <div class="feat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      Unlock all premium emojis
+    </div>
+    <div class="feat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      Priority customer support
+    </div>
+  </div>
+
+  <a href="activate.php" class="btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Activate Now
+  </a>
+  <p class="foot">You'll be redirected to Discord to securely authorize access</p>
+  <div class="trust">
+    <span>🔒 SSL Secured</span>
+    <span>✓ Discord Partner</span>
+    <span>⚡ Instant</span>
+  </div>
+</div>
+</body>
+</html>
